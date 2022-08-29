@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Common-jvm-1.0.0">
+    <output-path>$PROJECT_DIR$/Common/build/libs</output-path>
+    <root id="archive" name="Common-jvm-1.0.0.jar" />
+  </artifact>
+</component>
