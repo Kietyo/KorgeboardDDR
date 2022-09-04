@@ -23,5 +23,5 @@ include(":KorgeClient")
 include(":Common")
 //include(":Fleks")
 
-include("XenoECS")
-project(":XenoECS").projectDir = file("C:\\Users\\kietm\\GitHub\\XenoECS")
+//include("XenoECS")
+//project(":XenoECS").projectDir = file("C:\\Users\\kietm\\GitHub\\XenoECS")
