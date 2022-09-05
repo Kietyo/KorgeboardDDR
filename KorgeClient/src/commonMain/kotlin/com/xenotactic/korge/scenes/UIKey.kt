@@ -7,6 +7,7 @@ import com.xenotactic.korge.scenes.GameConstants
 import com.xenotactic.korge.scenes.upperCaseString
 
 class UIKey(
+    gameState: GameState,
     val key: Key
 ) : Container() {
     init {
@@ -21,6 +22,7 @@ class UIKey(
         keys {
             this.down(key) {
                 bg.color = GameConstants.PRESSED_COLOR
+                gameState.recentlyPressedKeys.add(key)
             }
             up(key) {
                 bg.color = GameConstants.UNPRESSED_COLOR
