@@ -2,10 +2,13 @@ package com.xenotactic.korge.scenes
 
 import com.soywiz.klock.Frequency
 import com.soywiz.klock.TimeSpan
+import com.soywiz.korau.sound.readMusic
+import com.soywiz.korau.sound.readSound
 import com.soywiz.korev.Key
 import com.soywiz.korge.scene.Scene
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.Colors
+import com.soywiz.korio.file.std.resourcesVfs
 import com.soywiz.korma.geom.Point
 import com.soywiz.korma.geom.vector.StrokeInfo
 import com.soywiz.korma.geom.vector.line
@@ -24,7 +27,7 @@ class MainScene : Scene() {
     override suspend fun SContainer.sceneInit() {
         println("MainScene")
         val keyToUIKey = mutableMapOf<Key, UIKey>()
-        val gameState = GameState(keyToUIKey = keyToUIKey)
+        val gameState = GameState(resourcesVfs["clap.mp3"].readSound(), keyToUIKey = keyToUIKey)
         val keyboardContainer = container {
             val charRows = listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
             val rowContainers = mutableListOf<Container>()
@@ -144,6 +147,9 @@ class MainScene : Scene() {
 
             gameState.recentlyPressedKeys.clear()
         }
+
+//        val sound = resourcesVfs["bird_world.mp3"].readSound()
+//        val channel = sound.play()
 
     }
 }

@@ -1,5 +1,6 @@
 package com.xenotactic.korge.scenes
 
+import com.soywiz.korau.sound.PlaybackTimes
 import com.soywiz.korev.Key
 import com.soywiz.korge.input.keys
 import com.soywiz.korge.view.*
@@ -20,7 +21,8 @@ class UIKey(
             centerOn(bg)
         }
         keys {
-            this.down(key) {
+            down(key) {
+                gameState.sfxClap.play()
                 bg.color = GameConstants.PRESSED_COLOR
                 gameState.recentlyPressedKeys.add(key)
             }
