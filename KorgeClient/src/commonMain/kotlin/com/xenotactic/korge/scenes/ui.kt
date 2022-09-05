@@ -37,7 +37,7 @@ class UIHorizontalBeat(
     val key: Key
 ) : Container() {
     init {
-        val rect = solidRect(HORIZONTAL_BEAT_WIDTH, GameConstants.HORIZONTAL_BEAT_TEXT_HEIGHT, HORIZONTAL_BEAT_COLOR)
+        val rect = solidRect(HORIZONTAL_BEAT_WIDTH, GameConstants.HORIZONTAL_BEAT_HEIGHT, HORIZONTAL_BEAT_COLOR)
         text(key.upperCaseString) {
             scaleWhileMaintainingAspect(ScalingOption.ByHeight(GameConstants.HORIZONTAL_BEAT_TEXT_HEIGHT))
             centerOn(rect)

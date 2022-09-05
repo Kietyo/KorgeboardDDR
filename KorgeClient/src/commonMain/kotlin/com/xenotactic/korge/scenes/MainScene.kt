@@ -10,6 +10,8 @@ import com.soywiz.korma.geom.Point
 import com.soywiz.korma.geom.vector.StrokeInfo
 import com.soywiz.korma.geom.vector.line
 import com.xenotactic.korge.scenes.GameConstants.BOTTOM_ROW_OFFSET
+import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_BEAT_HEIGHT
+import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_BEAT_VERTICAL_PADDING
 import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_FALL_SPEED
 import com.xenotactic.korge.scenes.GameConstants.VERTICAL_FALL_SPEED
 import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_KEY_PADDING
@@ -63,33 +65,60 @@ class MainScene : Scene() {
                 line(Point(0.0, 0.0), Point(0.0, 300.0))
             }
             it.alignLeftToLeftOf(keyboardContainer)
-            it.y += 50.0
+            it.y += 90.0
         }
 
         val allChars = "abcdefghijklmnopqrstuvwxyz"
         val fallingBeats = mutableListOf<BeatModel>()
 
-        val createBeatModelFn = {
-            val randomKey = allChars.random().toKey()
+        val createBeatModelFn = { ch: Char ->
+            val key = ch.toKey()
 
-            val keyUI = keyToUIKey[randomKey]!!
-            val uiVerticalBeat = UIVerticalBeat(gameState, randomKey).addTo(this).apply {
-                alignLeftToLeftOf(keyToUIKey[randomKey]!!)
-                y = -500.0
-            }
-            val distanceY = keyUI.getPositionRelativeTo(this).y - uiVerticalBeat.y
-            val numVerticalUpdates = distanceY / VERTICAL_FALL_SPEED
-            val extrapolatedHorizontalDistanceToMatchNumVerticalUpdates =
-                numVerticalUpdates * HORIZONTAL_FALL_SPEED
-            val uiHorizontalBeat = UIHorizontalBeat(randomKey).addTo(this) {
+            val distanceX = 900.0
+            val uiHorizontalBeat = UIHorizontalBeat(key).addTo(this) {
+                x = line.x + distanceX - width / 2.0
                 alignTopToTopOf(line)
-                x = line.x + extrapolatedHorizontalDistanceToMatchNumVerticalUpdates - width / 2.0
+                while (fallingBeats.any {
+                        collidesWith(it.uiHorizontalBeat)
+                    }) {
+                    y += HORIZONTAL_BEAT_HEIGHT + HORIZONTAL_BEAT_VERTICAL_PADDING
+                }
             }
-            BeatModel(randomKey, uiVerticalBeat, uiHorizontalBeat)
+
+            val numHorizontalUpdates = distanceX / HORIZONTAL_FALL_SPEED
+            val extrapolatedVerticalDistanceToMatchNumVerticalUpdates =
+                numHorizontalUpdates * VERTICAL_FALL_SPEED
+
+            val keyUI = keyToUIKey[key]!!
+            val uiVerticalBeat = UIVerticalBeat(gameState, key).addTo(this).apply {
+                alignLeftToLeftOf(keyToUIKey[key]!!)
+                y = keyUI.getPositionRelativeTo(this).y - extrapolatedVerticalDistanceToMatchNumVerticalUpdates
+            }
+//            val distanceY = keyUI.getPositionRelativeTo(this).y - uiVerticalBeat.y
+//            val numVerticalUpdates = distanceY / VERTICAL_FALL_SPEED
+
+
+            BeatModel(key, uiVerticalBeat, uiHorizontalBeat)
         }
 
-        addFixedUpdater(TimeSpan(800.0)) {
-            fallingBeats += createBeatModelFn()
+        val corpus = listOf(
+            "cow",
+            "assume",
+            "therapist",
+            "baby",
+            "action",
+            "stun",
+            "buy",
+            "flood",
+            "negligence",
+            "rich",
+        ).joinToString(" ")
+        val corpusIterator = corpus.iterator()
+
+        addFixedUpdater(TimeSpan(600.0)) {
+            if (!corpusIterator.hasNext()) return@addFixedUpdater
+            val nextChar = corpusIterator.nextChar()
+            if (nextChar != ' ') fallingBeats += createBeatModelFn(nextChar)
         }
 
         addFixedUpdater(Frequency(UPDATES_PER_SECOND)) {
