@@ -1,6 +1,7 @@
 package com.xenotactic.korge.scenes
 
 import com.soywiz.klock.Frequency
+import com.soywiz.klock.TimeSpan
 import com.soywiz.korev.Key
 import com.soywiz.korge.scene.Scene
 import com.soywiz.korge.view.*
@@ -13,7 +14,6 @@ import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_FALL_SPEED
 import com.xenotactic.korge.scenes.GameConstants.VERTICAL_FALL_SPEED
 import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_KEY_PADDING
 import com.xenotactic.korge.scenes.GameConstants.KEYBOARD_DISTANCE_FROM_BOTTOM_OF_WINDOW
-import com.xenotactic.korge.scenes.GameConstants.KEY_TEXT_HEIGHT
 import com.xenotactic.korge.scenes.GameConstants.MIDDLE_ROW_OFFSET
 import com.xenotactic.korge.scenes.GameConstants.UPDATES_PER_SECOND
 import com.xenotactic.korge.scenes.GameConstants.VERTICAL_KEY_PADDING
@@ -67,51 +67,48 @@ class MainScene : Scene() {
         }
 
         val allChars = "abcdefghijklmnopqrstuvwxyz"
-        val fallingRectsForKeys = mutableListOf<UIBeat>()
+        val fallingBeats = mutableListOf<BeatModel>()
 
+        val createBeatModelFn = {
+            val randomKey = allChars.random().toKey()
 
-
-//        addFixedUpdater(TimeSpan(1500.0)) {
-//            val randomChar = allChars.random().toKey()
-//            fallingRectsForKeys += UIBeat(gameState, randomChar).addTo(this).apply {
-//                alignLeftToLeftOf(keyToUIKey[randomChar]!!)
-//            }
-//        }
-
-        val randomKey = allChars.random().toKey()
-        fallingRectsForKeys += UIBeat(gameState, randomKey).addTo(this).apply {
-            alignLeftToLeftOf(keyToUIKey[randomKey]!!)
+            val keyUI = keyToUIKey[randomKey]!!
+            val uiVerticalBeat = UIVerticalBeat(gameState, randomKey).addTo(this).apply {
+                alignLeftToLeftOf(keyToUIKey[randomKey]!!)
+                y = -500.0
+            }
+            val distanceY = keyUI.getPositionRelativeTo(this).y - uiVerticalBeat.y
+            val numVerticalUpdates = distanceY / VERTICAL_FALL_SPEED
+            val extrapolatedHorizontalDistanceToMatchNumVerticalUpdates =
+                numVerticalUpdates * HORIZONTAL_FALL_SPEED
+            val uiHorizontalBeat = UIHorizontalBeat(randomKey).addTo(this) {
+                alignTopToTopOf(line)
+                x = line.x + extrapolatedHorizontalDistanceToMatchNumVerticalUpdates - width / 2.0
+            }
+            BeatModel(randomKey, uiVerticalBeat, uiHorizontalBeat)
         }
 
-        val firstUIBeat = fallingRectsForKeys.first()
-        val keyUI = keyToUIKey[firstUIBeat.key]!!
-
-        val distanceY = keyUI.getPositionRelativeTo(this).y - firstUIBeat.y
-
-        val numVerticalUpdates = distanceY / VERTICAL_FALL_SPEED
-        val extrapolatedHorizontalDistanceToMatchNumUpdates = numVerticalUpdates * HORIZONTAL_FALL_SPEED
-
-        val horizontalText = text(randomKey.upperCaseString) {
-            scaleWhileMaintainingAspect(ScalingOption.ByHeight(KEY_TEXT_HEIGHT))
-            centerYOn(line)
-            x = line.x + extrapolatedHorizontalDistanceToMatchNumUpdates - width
+        addFixedUpdater(TimeSpan(800.0)) {
+            fallingBeats += createBeatModelFn()
         }
-
 
         addFixedUpdater(Frequency(UPDATES_PER_SECOND)) {
-            fallingRectsForKeys.forEach {
-                it.y += VERTICAL_FALL_SPEED
-                if (it.y > height) it.removeFromParent()
+            fallingBeats.toList().forEach {
+                it.uiVerticalBeat.y += VERTICAL_FALL_SPEED
+                it.uiHorizontalBeat.x -= HORIZONTAL_FALL_SPEED
+                if (it.uiVerticalBeat.y > height) {
+                    it.removeFromParent()
+                    fallingBeats.remove(it)
+                }
             }
 
-            horizontalText.x -= HORIZONTAL_FALL_SPEED
-
-            fallingRectsForKeys.forEach {
+            fallingBeats.toList().forEach {
                 if (gameState.recentlyPressedKeys.contains(it.key)) {
                     val keyUi = keyToUIKey[it.key]!!
                     val keyUiPos = keyUi.getPositionRelativeTo(this)
-                    if (it.y in (keyUiPos.y - keyUi.height)..(keyUiPos.y + keyUi.height)) {
+                    if (it.uiVerticalBeat.y in (keyUiPos.y - keyUi.height)..(keyUiPos.y + keyUi.height)) {
                         it.removeFromParent()
+                        fallingBeats.remove(it)
                     }
                 }
             }
