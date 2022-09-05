@@ -14,5 +14,6 @@ object GameConstants {
     val KEY_TEXT_HEIGHT = 35.0
     val KEYBOARD_DISTANCE_FROM_BOTTOM_OF_WINDOW = 20.0
     val UPDATES_PER_SECOND = 60.0
-    val FALL_SPEED = 4.0
+    val VERTICAL_FALL_SPEED = 1.0
+    val HORIZONTAL_FALL_SPEED = 0.5
 }
