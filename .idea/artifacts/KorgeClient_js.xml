@@ -1,8 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="KorgeClient-js">
     <output-path>$PROJECT_DIR$/KorgeClient/build/libs</output-path>
-    <root id="archive" name="KorgeClient-js.jar">
-      <element id="module-output" name="KorgeboardDDR.KorgeClient.jsMain" />
-    </root>
+    <root id="archive" name="KorgeClient-js.jar" />
   </artifact>
 </component>

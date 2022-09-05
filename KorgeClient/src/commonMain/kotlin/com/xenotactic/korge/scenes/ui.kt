@@ -7,6 +7,7 @@ import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_BEAT_WIDTH
 
 data class BeatModel(
     val key: Key,
+    val timeMillis: Long,
     val uiVerticalBeat: UIVerticalBeat,
     val uiHorizontalBeat: UIHorizontalBeat
 ) {
@@ -18,7 +19,8 @@ data class BeatModel(
 
 class UIVerticalBeat(
     gameState: GameState,
-    val key: Key
+    val key: Key,
+    val timeMillis: Long
 ) : Container() {
     init {
         val rect = solidRect(
@@ -34,7 +36,8 @@ class UIVerticalBeat(
 }
 
 class UIHorizontalBeat(
-    val key: Key
+    val key: Key,
+    val timeMillis: Long
 ) : Container() {
     init {
         val rect = solidRect(HORIZONTAL_BEAT_WIDTH, GameConstants.HORIZONTAL_BEAT_HEIGHT, HORIZONTAL_BEAT_COLOR)
