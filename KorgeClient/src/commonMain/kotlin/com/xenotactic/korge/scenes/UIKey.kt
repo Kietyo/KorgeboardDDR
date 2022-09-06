@@ -1,14 +1,11 @@
 package com.xenotactic.korge.scenes
 
-import com.soywiz.korau.sound.PlaybackTimes
 import com.soywiz.korev.Key
 import com.soywiz.korge.input.keys
 import com.soywiz.korge.view.*
-import com.xenotactic.korge.scenes.GameConstants
-import com.xenotactic.korge.scenes.upperCaseString
 
 class UIKey(
-    gameState: GameState,
+    gameWorld: GameWorld,
     val key: Key
 ) : Container() {
     init {
@@ -22,9 +19,9 @@ class UIKey(
         }
         keys {
             down(key) {
-                gameState.sfxClap.play()
+                gameWorld.sfxClap.play()
                 bg.color = GameConstants.PRESSED_COLOR
-                gameState.recentlyPressedKeys.add(key)
+                gameWorld.recentlyPressedKeys.add(key)
             }
             up(key) {
                 bg.color = GameConstants.UNPRESSED_COLOR

@@ -12,7 +12,6 @@ import com.soywiz.korio.file.std.resourcesVfs
 import com.soywiz.korma.geom.Point
 import com.soywiz.korma.geom.vector.StrokeInfo
 import com.soywiz.korma.geom.vector.line
-import com.xenotactic.ecs.World
 import com.xenotactic.korge.scenes.GameConstants.BOTTOM_ROW_OFFSET
 import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_BEAT_HEIGHT
 import com.xenotactic.korge.scenes.GameConstants.HORIZONTAL_BEAT_VERTICAL_PADDING
@@ -23,12 +22,13 @@ import com.xenotactic.korge.scenes.GameConstants.KEYBOARD_DISTANCE_FROM_BOTTOM_O
 import com.xenotactic.korge.scenes.GameConstants.MIDDLE_ROW_OFFSET
 import com.xenotactic.korge.scenes.GameConstants.UPDATES_PER_SECOND
 import com.xenotactic.korge.scenes.GameConstants.VERTICAL_KEY_PADDING
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainScene : Scene() {
     override suspend fun SContainer.sceneInit() {
         println("MainScene")
         val keyToUIKey = mutableMapOf<Key, UIKey>()
-        val gameState = GameState(resourcesVfs["clap.mp3"].readSound(), keyToUIKey = keyToUIKey)
+        val gameWorld = GameWorld(resourcesVfs["clap.mp3"].readSound(), width, height)
         val keyboardContainer = container {
             val charRows = listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
             val rowContainers = mutableListOf<Container>()
@@ -37,7 +37,7 @@ class MainScene : Scene() {
                     val viewRow = mutableListOf<View>()
                     for (char in charRow) {
                         val key = char.toKey()
-                        val uiKey = UIKey(gameState, key).addTo(this)
+                        val uiKey = UIKey(gameWorld, key).addTo(this)
                         keyToUIKey[key] = uiKey
                         viewRow += uiKey
                     }
@@ -73,8 +73,12 @@ class MainScene : Scene() {
         }
 
         val allChars = "abcdefghijklmnopqrstuvwxyz"
-        val fallingBeats = mutableListOf<BeatModel>()
         val startTimeMillis = DateTime.nowUnixMillis()
+        gameWorld.world.apply {
+            addSystem(MoveVerticalBeatsSystem(gameWorld))
+            addSystem(MoveHorizontalBeatsSystem(gameWorld))
+            addSystem(RemoveBeatsSystem(gameWorld))
+        }
 
         val createBeatModelFn = { ch: Char ->
             val currentTimeMillis = DateTime.nowUnixMillis()
@@ -89,7 +93,7 @@ class MainScene : Scene() {
             val uiHorizontalBeat = UIHorizontalBeat(key, beatTimeMillis).addTo(this) {
                 x = line.x + distanceHorizontalBeat - width / 2.0
                 alignTopToTopOf(line)
-                while (fallingBeats.any {
+                while (gameWorld.fallingBeats.any {
                         collidesWith(it.uiHorizontalBeat)
                     }) {
                     y += HORIZONTAL_BEAT_HEIGHT + HORIZONTAL_BEAT_VERTICAL_PADDING
@@ -98,9 +102,15 @@ class MainScene : Scene() {
 
             val distanceVerticalBeat = numUpdatesTillBeat * VERTICAL_FALL_SPEED_PER_UPDATE
             val keyUI = keyToUIKey[key]!!
-            val uiVerticalBeat = UIVerticalBeat(gameState, key, beatTimeMillis).addTo(this).apply {
+            val uiVerticalBeat = UIVerticalBeat(gameWorld, key, beatTimeMillis).addTo(this).apply {
                 alignLeftToLeftOf(keyToUIKey[key]!!)
                 y = keyUI.getPositionRelativeTo(this).y - distanceVerticalBeat
+            }
+
+            gameWorld.world.addEntity {
+                addComponentOrThrow(BeatComponent(key, beatTimeMillis))
+                addComponentOrThrow(uiVerticalBeat)
+                addComponentOrThrow(uiHorizontalBeat)
             }
 
             BeatModel(key, beatTimeMillis, uiVerticalBeat, uiHorizontalBeat)
@@ -120,36 +130,36 @@ class MainScene : Scene() {
         ).joinToString(" ")
         val corpusIterator = corpus.iterator()
 
-        val world = World().apply {
-        }
+
 
 
         addFixedUpdater(TimeSpan(1000.0)) {
             if (!corpusIterator.hasNext()) return@addFixedUpdater
             val nextChar = corpusIterator.nextChar()
-            if (nextChar != ' ') fallingBeats += createBeatModelFn(nextChar)
+            if (nextChar != ' ') gameWorld.fallingBeats += createBeatModelFn(nextChar)
         }
 
-
+        val frameDelta = (1000.0 / UPDATES_PER_SECOND).milliseconds
         addFixedUpdater(Frequency(UPDATES_PER_SECOND)) {
-            fallingBeats.toList().forEach {
-                it.uiVerticalBeat.y += VERTICAL_FALL_SPEED_PER_UPDATE
-                it.uiHorizontalBeat.x -= HORIZONTAL_FALL_SPEED_PER_UPDATE
+            gameWorld.world.update(frameDelta)
+            gameWorld.fallingBeats.toList().forEach {
+//                it.uiVerticalBeat.y += VERTICAL_FALL_SPEED_PER_UPDATE
+//                it.uiHorizontalBeat.x -= HORIZONTAL_FALL_SPEED_PER_UPDATE
                 if (it.uiVerticalBeat.y > height) {
-                    it.removeFromParent()
-                    fallingBeats.remove(it)
+//                    it.removeFromParent()
+                    gameWorld.fallingBeats.remove(it)
                 }
             }
 
             val currentTime = DateTime.nowUnixMillis()
 
-            fallingBeats.toList().forEach {
-                if (gameState.recentlyPressedKeys.contains(it.key)) {
+            gameWorld.fallingBeats.toList().forEach {
+                if (gameWorld.recentlyPressedKeys.contains(it.key)) {
 
                     val inside = currentTime in (it.timeMillis - 200)..(it.timeMillis + 200)
                     if (inside) {
                         it.removeFromParent()
-                        fallingBeats.remove(it)
+                        gameWorld.fallingBeats.remove(it)
                     }
 
 //                    val keyUi = keyToUIKey[it.key]!!
@@ -161,7 +171,7 @@ class MainScene : Scene() {
                 }
             }
 
-            gameState.recentlyPressedKeys.clear()
+            gameWorld.recentlyPressedKeys.clear()
         }
 
 //        val sound = resourcesVfs["bird_world.mp3"].readSound()
