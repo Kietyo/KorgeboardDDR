@@ -4,11 +4,10 @@ import com.soywiz.korge.view.text
 import com.soywiz.korim.color.Colors
 import com.soywiz.korim.format.PNG
 import com.soywiz.korim.format.readBitmap
-import com.soywiz.korio.file.std.resourcesVfs
 import com.soywiz.korio.file.std.rootLocalVfs
 import kotlinx.coroutines.runBlocking
 
-object DebugMain {
+object DebugMain2 {
     val RESOURCES_FOLDER = rootLocalVfs["XenoTactic-Korge/src/commonMain/resources"]
 
     @JvmStatic

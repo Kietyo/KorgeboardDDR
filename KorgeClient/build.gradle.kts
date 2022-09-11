@@ -26,7 +26,7 @@ korge {
 	//targetAndroidDirect()
 
 //	serializationJson()
-	entrypoint("Debug", "DebugMain")
+	entrypoint("DebugMain", "DebugMain")
 
 }
 
