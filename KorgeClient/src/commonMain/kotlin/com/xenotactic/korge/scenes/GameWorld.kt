@@ -11,6 +11,7 @@ class GameWorld(
     val windowHeight: Double,
 ) {
     val world = World()
+    val beatsContainer = world.getComponentContainer<BeatComponent>()
     val verticalBeatsContainer = world.getComponentContainer<UIVerticalBeat>()
     val horizontalBeatsContainer = world.getComponentContainer<UIHorizontalBeat>()
     val recentlyPressedKeys: MutableSet<Key> = mutableSetOf<Key>()

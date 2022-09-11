@@ -1,5 +1,6 @@
 package com.xenotactic.korge.scenes
 
+import com.soywiz.klock.DateTime
 import com.xenotactic.ecs.FamilyConfiguration
 import com.xenotactic.ecs.System
 import kotlin.time.Duration
@@ -32,7 +33,7 @@ class MoveHorizontalBeatsSystem(
     }
 }
 
-class RemoveBeatsSystem(
+class RemoveBeatsAfterMissSystem(
     val gameWorld: GameWorld
 ) : System() {
     override var familyConfiguration: FamilyConfiguration =
@@ -41,12 +42,16 @@ class RemoveBeatsSystem(
         )
 
     override fun update(deltaTime: Duration) {
+        val currentTime = DateTime.nowUnixMillis()
         getFamily().getSequence().forEach {
-            val verticalUI = gameWorld.verticalBeatsContainer.getComponent(it)
+
+            val verticalUI = gameWorld.verticalBeatsContainer.getComponentOrNull(it)
             val horizontalUI = gameWorld.horizontalBeatsContainer.getComponentOrNull(it)
-            if (verticalUI.y > gameWorld.windowHeight) {
-                verticalUI.removeFromParent()
+            val beatTime = gameWorld.beatsContainer.getComponent(it).timeMillis
+            if ((currentTime - beatTime) >= 1000) {
+                verticalUI?.removeFromParent()
                 horizontalUI?.removeFromParent()
+                gameWorld.world.removeEntity(it)
             }
         }
     }

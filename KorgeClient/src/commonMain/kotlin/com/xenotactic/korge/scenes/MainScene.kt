@@ -77,7 +77,7 @@ class MainScene : Scene() {
         gameWorld.world.apply {
             addSystem(MoveVerticalBeatsSystem(gameWorld))
             addSystem(MoveHorizontalBeatsSystem(gameWorld))
-            addSystem(RemoveBeatsSystem(gameWorld))
+            addSystem(RemoveBeatsAfterMissSystem(gameWorld))
         }
 
         val createBeatModelFn = { ch: Char ->
@@ -102,7 +102,7 @@ class MainScene : Scene() {
 
             val distanceVerticalBeat = numUpdatesTillBeat * VERTICAL_FALL_SPEED_PER_UPDATE
             val keyUI = keyToUIKey[key]!!
-            val uiVerticalBeat = UIVerticalBeat(gameWorld, key, beatTimeMillis).addTo(this).apply {
+            val uiVerticalBeat = UIVerticalBeat(key, beatTimeMillis).addTo(this).apply {
                 alignLeftToLeftOf(keyToUIKey[key]!!)
                 y = keyUI.getPositionRelativeTo(this).y - distanceVerticalBeat
             }
@@ -131,8 +131,6 @@ class MainScene : Scene() {
         val corpusIterator = corpus.iterator()
 
 
-
-
         addFixedUpdater(TimeSpan(1000.0)) {
             if (!corpusIterator.hasNext()) return@addFixedUpdater
             val nextChar = corpusIterator.nextChar()
@@ -142,14 +140,6 @@ class MainScene : Scene() {
         val frameDelta = (1000.0 / UPDATES_PER_SECOND).milliseconds
         addFixedUpdater(Frequency(UPDATES_PER_SECOND)) {
             gameWorld.world.update(frameDelta)
-            gameWorld.fallingBeats.toList().forEach {
-//                it.uiVerticalBeat.y += VERTICAL_FALL_SPEED_PER_UPDATE
-//                it.uiHorizontalBeat.x -= HORIZONTAL_FALL_SPEED_PER_UPDATE
-                if (it.uiVerticalBeat.y > height) {
-//                    it.removeFromParent()
-                    gameWorld.fallingBeats.remove(it)
-                }
-            }
 
             val currentTime = DateTime.nowUnixMillis()
 

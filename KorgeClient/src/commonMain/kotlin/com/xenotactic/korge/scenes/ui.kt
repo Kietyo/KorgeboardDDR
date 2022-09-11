@@ -18,7 +18,6 @@ data class BeatModel(
 }
 
 class UIVerticalBeat(
-    gameState: GameState,
     val key: Key,
     val timeMillis: Long
 ) : Container() {
