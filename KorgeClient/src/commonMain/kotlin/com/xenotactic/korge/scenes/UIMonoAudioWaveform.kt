@@ -13,7 +13,7 @@ class UIMonoAudioWaveform(
     val averageBuckets: DoubleArray
 ) : Container() {
     init {
-        val xOffsetDelta = 10.0
+        val xOffsetDelta = 0.25
         var xOffset = 0.0
 
         dockedTo(Anchor.LEFT)
@@ -21,7 +21,7 @@ class UIMonoAudioWaveform(
         averageBuckets.forEach { sample ->
             solidRect(
                 xOffsetDelta,
-                sample
+                -sample
             ) {
                 x = xOffset
             }
@@ -45,5 +45,6 @@ class UIMonoAudioWaveform(
 //        }
 
         scaledHeight = waveformHeight
+        scaledWidth = 5000.0
     }
 }
