@@ -11,10 +11,7 @@ import com.soywiz.korma.geom.Anchor
 import com.soywiz.korma.geom.Point
 import com.xenotactic.korge.scenes.UIMonoAudioWaveform
 import kotlin.jvm.JvmStatic
-import kotlin.math.abs
-import kotlin.math.absoluteValue
-import kotlin.math.log
-import kotlin.math.max
+import kotlin.math.*
 
 object DebugMain {
 
@@ -37,11 +34,12 @@ object DebugMain {
 
             val totalDuration = sound.length
             val samplesPerSecond = audioData.rate
-            val bucketsPerSecond = 128.0
+            val bucketsPerSecond = 256.0
             val millisecondsPerBucket = 1000.0 / bucketsPerSecond
             val samplesPerBucket = samplesPerSecond / bucketsPerSecond
             val samplesPerBucketInt = samplesPerBucket.toInt()
-            val totalBuckets = channel1.size / samplesPerBucketInt
+//            val totalBuckets = channel1.size / samplesPerBucketInt
+            val totalBuckets = 4096
 
             println(
                 """
@@ -60,12 +58,28 @@ object DebugMain {
             )
 
             val maxBuckets = DoubleArray(totalBuckets + 1)
+            val minBuckets = DoubleArray(totalBuckets + 1)
             val averageBuckets = DoubleArray(totalBuckets + 1)
+            val positiveAverageBuckets = DoubleArray(totalBuckets + 1)
+            val positiveCountBuckets = IntArray(totalBuckets + 1)
+            val negativeAverageBuckets = DoubleArray(totalBuckets + 1)
+            val negativeCounterBuckets = IntArray(totalBuckets + 1)
 
-            for (i in channel1.indices) {
+            for (i in 0 until totalBuckets) {
                 val bucketIndex = i / samplesPerBucketInt
+                val sampleAsDouble = channel1[i].toDouble()
                 averageBuckets[bucketIndex] = averageBuckets[bucketIndex] + channel1[i]
-                maxBuckets[bucketIndex] = max(maxBuckets[bucketIndex], channel1[i].toDouble())
+                maxBuckets[bucketIndex] = max(maxBuckets[bucketIndex], sampleAsDouble)
+                minBuckets[bucketIndex] = min(minBuckets[bucketIndex], sampleAsDouble)
+                if (sampleAsDouble >= 0.0) {
+                    positiveAverageBuckets[bucketIndex] =
+                        positiveAverageBuckets[bucketIndex] + sampleAsDouble
+                    positiveCountBuckets[bucketIndex] = positiveCountBuckets[bucketIndex] + 1
+                } else {
+                    negativeAverageBuckets[bucketIndex] =
+                        negativeAverageBuckets[bucketIndex] + sampleAsDouble
+                    negativeCounterBuckets[bucketIndex] = negativeCounterBuckets[bucketIndex] + 1
+                }
             }
 
 //            println("Bucket sums")
@@ -78,15 +92,28 @@ object DebugMain {
 //            println("Bucket averages")
 //            println(averageBuckets.toList())
 
-            val waveformHeight = 400.0
-            val xOffsetDelta = 0.25
+            val waveformHeight = 100.0
 
-            val waveformContainer = UIMonoAudioWaveform(
+//            val waveformContainer = UIMonoAudioWaveform(
+//                waveformHeight,
+//                averageBuckets
+//            ).addTo(this) {
+//                centerYOnStage()
+//            }
+
+            val fakeAverageBuckets = DoubleArray(averageBuckets.size)
+            for (i in averageBuckets.indices) {
+                fakeAverageBuckets[i] =
+                    100.0 * sin(2 * PI * (millisecondsPerBucket * i + millisecondsPerBucket / 2.0))
+            }
+
+            val fakeWaveformContainer = UIMonoAudioWaveform(
                 waveformHeight,
-                averageBuckets
+                fakeAverageBuckets
             ).addTo(this) {
                 centerYOnStage()
             }
+
 
 //            val xOffsetDelta = 0.25
 //            var xOffset = 0.0
@@ -112,23 +139,23 @@ object DebugMain {
 //                println("Done drawing waveform")
 //            }
 
-            val line = solidRect(5.0, waveformHeight, Colors.YELLOW) {
-                centerYOn(waveformContainer)
-            }
-
-            val channel = sound.play()
-
-            addUpdater {
-                val currentMillis = channel.current.milliseconds
-                val currentBucketIndex = currentMillis / millisecondsPerBucket
-//                waveformContainer.x = -xOffsetDelta * currentBucketIndex
-
-                line.setPositionRelativeTo(
-                    waveformContainer,
-                    Point(xOffsetDelta * currentBucketIndex, 0.0)
-                )
-                line.centerYOn(waveformContainer)
-            }
+//            val line = solidRect(5.0, waveformHeight, Colors.YELLOW) {
+//                centerYOn(waveformContainer)
+//            }
+//
+//            val channel = sound.play()
+//
+//            addUpdater {
+//                val currentMillis = channel.current.milliseconds
+//                val currentBucketIndex = currentMillis / millisecondsPerBucket
+////                waveformContainer.x = -xOffsetDelta * currentBucketIndex
+//
+//                line.setPositionRelativeTo(
+//                    waveformContainer,
+//                    Point(xOffsetDelta * currentBucketIndex, 0.0)
+//                )
+//                line.centerYOn(waveformContainer)
+//            }
 
 //            sound.playAndWait { current, total ->
 //

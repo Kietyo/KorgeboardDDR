@@ -27,6 +27,7 @@ korge {
 
 //	serializationJson()
 	entrypoint("DebugMain", "DebugMain")
+	entrypoint("DebugMain2", "DebugMain2")
 
 }
 

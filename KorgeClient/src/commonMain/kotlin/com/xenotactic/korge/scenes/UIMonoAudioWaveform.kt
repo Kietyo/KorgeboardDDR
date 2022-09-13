@@ -13,22 +13,36 @@ class UIMonoAudioWaveform(
     val averageBuckets: DoubleArray
 ) : Container() {
     init {
-        val xOffsetDelta = 0.25
+        val xOffsetDelta = 10.0
         var xOffset = 0.0
 
         dockedTo(Anchor.LEFT)
 //                val maxSample = averageBuckets.max()
         averageBuckets.forEach { sample ->
-            val height = if (sample.absoluteValue == 0.0) 0.0 else log(
-                max(sample.absoluteValue, 1.0),
-                5.0
-            )
-            solidRect(xOffsetDelta, height) {
+            solidRect(
+                xOffsetDelta,
+                sample
+            ) {
                 x = xOffset
-                y = -height / 2
             }
             xOffset += xOffsetDelta
         }
+
+//        averageBuckets.forEach { sample ->
+//            val isNegative = sample < 0.0
+//            val absoluteLogAmplitude = log(
+//                max(sample.absoluteValue, 1.0),
+//                10.0
+//            )
+//            solidRect(
+//                xOffsetDelta,
+//                if (isNegative) -absoluteLogAmplitude else absoluteLogAmplitude
+//            ) {
+//                x = xOffset
+////                y = absoluteLogAmplitude + if (isNegative) -absoluteLogAmplitude else absoluteLogAmplitude
+//            }
+//            xOffset += xOffsetDelta
+//        }
 
         scaledHeight = waveformHeight
     }
