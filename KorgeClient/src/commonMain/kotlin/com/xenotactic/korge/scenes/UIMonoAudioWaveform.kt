@@ -2,31 +2,54 @@ package com.xenotactic.korge.scenes
 
 import com.soywiz.korge.component.docking.dockedTo
 import com.soywiz.korge.view.Container
-import com.soywiz.korge.view.solidRect
+import com.soywiz.korge.view.graphics
+import com.soywiz.korim.color.Colors
 import com.soywiz.korma.geom.Anchor
-import kotlin.math.absoluteValue
-import kotlin.math.log
-import kotlin.math.max
+import com.soywiz.korma.geom.vector.StrokeInfo
+import com.soywiz.korma.geom.vector.line
 
 class UIMonoAudioWaveform(
     val waveformHeight: Double,
-    val averageBuckets: DoubleArray
+    val averageBuckets: DoubleArray,
+    val xOffsetDelta: Double
 ) : Container() {
     init {
-        val xOffsetDelta = 0.25
+
         var xOffset = 0.0
 
         dockedTo(Anchor.LEFT)
 //                val maxSample = averageBuckets.max()
-        averageBuckets.forEach { sample ->
-            solidRect(
-                xOffsetDelta,
-                -sample
-            ) {
-                x = xOffset
-            }
-            xOffset += xOffsetDelta
+
+
+        val graphics = graphics {
+
         }
+
+        graphics.updateShape {
+            var prevXOffset = 0.0
+            var prevSample = 0.0
+            averageBuckets.take(5000).forEach { sample ->
+                val currentSample = if (sample.isNaN()) 0.0 else sample
+                stroke(Colors.WHITE, StrokeInfo(thickness = 1.0)) {
+                    val nextXOffset = prevXOffset + xOffsetDelta
+                    line(prevXOffset, prevSample, nextXOffset, currentSample)
+                    prevXOffset = nextXOffset
+                    prevSample = currentSample
+                }
+            }
+        }
+
+        println("Finished drawing shape")
+
+//        averageBuckets.forEach { sample ->
+//            solidRect(
+//                xOffsetDelta,
+//                -sample
+//            ) {
+//                x = xOffset
+//            }
+//            xOffset += xOffsetDelta
+//        }
 
 //        averageBuckets.forEach { sample ->
 //            val isNegative = sample < 0.0
@@ -45,6 +68,6 @@ class UIMonoAudioWaveform(
 //        }
 
         scaledHeight = waveformHeight
-        scaledWidth = 5000.0
+        scaledWidth = 1280.0
     }
 }

@@ -1,6 +1,9 @@
+import com.soywiz.kmem.clamp
 import com.soywiz.korau.sound.readSound
 import com.soywiz.korge.Korge
 import com.soywiz.korge.component.docking.dockedTo
+import com.soywiz.korge.input.draggable
+import com.soywiz.korge.input.onScroll
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.Colors
 import com.soywiz.korio.async.runBlockingNoJs
@@ -34,7 +37,7 @@ object DebugMain {
 
             val totalDuration = sound.length
             val samplesPerSecond = audioData.rate
-            val bucketsPerSecond = 512.0
+            val bucketsPerSecond = 128.0
             val millisecondsPerBucket = 1000.0 / bucketsPerSecond
             val samplesPerBucket = samplesPerSecond / bucketsPerSecond
             val samplesPerBucketInt = samplesPerBucket.toInt()
@@ -91,6 +94,15 @@ object DebugMain {
                 averageBuckets[i] = averageBuckets[i] / samplesPerBucket
             }
 
+//            for (i in averageBuckets.indices) {
+//                val sample = averageBuckets[i]
+//                if (sample >= 0.0) {
+//                    averageBuckets[i] = log(max(1.0, sample), 1.5)
+//                } else {
+//                    averageBuckets[i] = -log(max(1.0, sample.absoluteValue), 1.5)
+//                }
+//            }
+
 //            println("Bucket averages")
 //            println(averageBuckets.toList())
 
@@ -103,8 +115,16 @@ object DebugMain {
             }
 
             val resultBuckets = DoubleArray(averageBuckets.size)
+//            for (i in averageBuckets.indices) {
+//                if (fakeAverageBuckets[i] >= 0) {
+//                    resultBuckets[i] = if (positiveCountBuckets[i] == 0) 0.0 else positiveAverageBuckets[i] / positiveCountBuckets[i] * 1.0
+//                } else {
+//                    resultBuckets[i] = if (negativeCounterBuckets[i] == 0) 0.0 else negativeAverageBuckets[i] / negativeCounterBuckets[i] * 1.0
+//                }
+//            }
+
             for (i in averageBuckets.indices) {
-                if (fakeAverageBuckets[i] >= 0) {
+                if (averageBuckets[i] >= 0) {
                     resultBuckets[i] = if (positiveCountBuckets[i] == 0) 0.0 else positiveAverageBuckets[i] / positiveCountBuckets[i] * 1.0
                 } else {
                     resultBuckets[i] = if (negativeCounterBuckets[i] == 0) 0.0 else negativeAverageBuckets[i] / negativeCounterBuckets[i] * 1.0
@@ -130,9 +150,12 @@ object DebugMain {
 //                centerYOnStage()
 //            }
 
+            val xOffsetDelta = 1.0
+
             val waveformContainer = UIMonoAudioWaveform(
                 waveformHeight,
-                resultBuckets
+                resultBuckets,
+                xOffsetDelta
             ).addTo(this) {
                 centerYOnStage()
             }
@@ -142,7 +165,6 @@ object DebugMain {
 
 
 
-            val xOffsetDelta = 0.25
 //            var xOffset = 0.0
 //            var maxSample = 0.0
 //            val waveformContainer = container {
@@ -166,12 +188,13 @@ object DebugMain {
 //                println("Done drawing waveform")
 //            }
 
-            val line = solidRect(5.0, waveformHeight, Colors.YELLOW) {
+            val lineWidth = 5.0
+            val line = solidRect(lineWidth, waveformHeight, Colors.YELLOW) {
                 centerYOn(waveformContainer)
             }
-
+//
             val channel = sound.play()
-
+//
             addUpdater {
                 val currentMillis = channel.current.milliseconds
                 val currentBucketIndex = currentMillis / millisecondsPerBucket
@@ -179,7 +202,7 @@ object DebugMain {
 
                 line.setPositionRelativeTo(
                     waveformContainer,
-                    Point(xOffsetDelta * currentBucketIndex, 0.0)
+                    Point(xOffsetDelta * currentBucketIndex - lineWidth / 2, 0.0)
                 )
                 line.centerYOn(waveformContainer)
             }
@@ -190,6 +213,32 @@ object DebugMain {
 ////                line.x = xOffsetDelta * currentBucketIndex
 //                waveformContainer.x = -xOffsetDelta * currentBucketIndex
 //            }
+
+            waveformContainer.draggable {  }
+
+            onScroll {
+                if (it.isCtrlDown) {
+                    if (it.scrollDeltaYLines < 0.0) {
+                        // Zoom in
+                        waveformContainer.scaledHeight += 250.0
+                    } else {
+                        // Zoom out
+                        waveformContainer.scaledHeight = max((waveformContainer.scaledHeight - 250.0), 100.0)
+                    }
+                } else {
+                    if (it.scrollDeltaYLines < 0.0) {
+                        // Zoom in
+                        waveformContainer.scaledWidth += 250.0
+                    } else {
+                        // Zoom out
+                        waveformContainer.scaledWidth = max((waveformContainer.scaledWidth - 250.0), 100.0)
+                    }
+                }
+
+                line.scaledHeight = waveformContainer.scaledHeight
+
+                println(it)
+            }
 
         }
     }
