@@ -22,7 +22,7 @@ class ParsedChannel(
     // using avg to decide on min and max
     val resultBuckets1 = DoubleArray(totalBuckets + 1)
     // using avg
-    val resultBuckets2 = DoubleArray(totalBuckets + 1)
+    val averageBuckets = DoubleArray(totalBuckets + 1)
 
     init {
         println(
@@ -42,7 +42,7 @@ class ParsedChannel(
 
         val maxBuckets = DoubleArray(totalBuckets + 1)
         val minBuckets = DoubleArray(totalBuckets + 1)
-        val averageBuckets = DoubleArray(totalBuckets + 1)
+
         val positiveAverageBuckets = DoubleArray(totalBuckets + 1)
         val positiveCountBuckets = IntArray(totalBuckets + 1)
         val negativeAverageBuckets = DoubleArray(totalBuckets + 1)

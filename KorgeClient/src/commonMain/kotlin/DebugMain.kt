@@ -31,7 +31,7 @@ object DebugMain {
             println("channel1: ${channel1}")
             println("channel1.size: ${channel1.size}")
 
-            val parsedChannel = ParsedChannel(channel1, audioData.rate, 128.0)
+            val parsedChannel = ParsedChannel(channel1, audioData.rate, 32.0)
 
             val waveformHeight = 200.0
 
@@ -47,8 +47,14 @@ object DebugMain {
                     waveformHeight,
                     parsedChannel.resultBuckets1,
                     xOffsetDelta
+                ).addTo(this)
+                val waveform2 = UIMonoAudioWaveform(
+                    waveformHeight,
+                    parsedChannel.averageBuckets,
+                    xOffsetDelta
                 ).addTo(this) {
-                    centerYOnStage()
+//                    alignTopToBottomOf(waveform1)
+                    y += waveformHeight
                 }
 
 
@@ -64,6 +70,8 @@ object DebugMain {
                     line.centerYOn(waveform1)
                 }
             }
+
+            waveformContainer.centerYOnStage()
 
 
 

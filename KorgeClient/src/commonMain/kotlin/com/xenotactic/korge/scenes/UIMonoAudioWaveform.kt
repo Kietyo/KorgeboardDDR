@@ -10,14 +10,14 @@ import com.soywiz.korma.geom.vector.line
 
 class UIMonoAudioWaveform(
     val waveformHeight: Double,
-    val averageBuckets: DoubleArray,
+    val bucketSamples: DoubleArray,
     val xOffsetDelta: Double
 ) : Container() {
     init {
 
         var xOffset = 0.0
 
-        dockedTo(Anchor.LEFT)
+//        dockedTo(Anchor.LEFT)
 //                val maxSample = averageBuckets.max()
 
 
@@ -28,7 +28,7 @@ class UIMonoAudioWaveform(
         graphics.updateShape {
             var prevXOffset = 0.0
             var prevSample = 0.0
-            averageBuckets.forEach { sample ->
+            bucketSamples.take(1000).forEach { sample ->
                 val currentSample = if (sample.isNaN()) 0.0 else sample
                 stroke(Colors.WHITE, StrokeInfo(thickness = 1.0)) {
                     val nextXOffset = prevXOffset + xOffsetDelta
