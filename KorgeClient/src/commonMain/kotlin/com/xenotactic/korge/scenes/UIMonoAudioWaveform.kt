@@ -28,7 +28,7 @@ class UIMonoAudioWaveform(
         graphics.updateShape {
             var prevXOffset = 0.0
             var prevSample = 0.0
-            bucketSamples.take(1000).forEach { sample ->
+            bucketSamples.take(5000).forEach { sample ->
                 val currentSample = if (sample.isNaN()) 0.0 else sample
                 stroke(Colors.WHITE, StrokeInfo(thickness = 1.0)) {
                     val nextXOffset = prevXOffset + xOffsetDelta
