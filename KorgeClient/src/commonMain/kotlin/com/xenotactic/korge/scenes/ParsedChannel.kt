@@ -2,10 +2,7 @@ package com.xenotactic.korge.scenes
 
 import com.soywiz.korio.util.endExclusiveClamped
 import com.soywiz.korio.util.endExclusiveWrapped
-import kotlin.math.PI
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sin
+import kotlin.math.*
 
 class ParsedChannel(
     val samples: ShortArray,
@@ -21,6 +18,16 @@ class ParsedChannel(
 
     // using avg to decide on min and max
     val resultBuckets1 = DoubleArray(totalBuckets + 1)
+
+    // Comparing between absolute value of positive avgs and negative avg and choosing the one with the highest absolute value
+    val resultBuckets2 = DoubleArray(totalBuckets + 1)
+
+    // Comparing between absolute value of min and max and choosing the one with the highest absolute value
+    val resultBuckets3 = DoubleArray(totalBuckets + 1)
+
+    // using avg to decide on positive avg or negative avg
+    val resultBuckets4 = DoubleArray(totalBuckets + 1)
+
     // using avg
     val averageBuckets = DoubleArray(totalBuckets + 1)
 
@@ -43,10 +50,10 @@ class ParsedChannel(
         val maxBuckets = DoubleArray(totalBuckets + 1)
         val minBuckets = DoubleArray(totalBuckets + 1)
 
-        val positiveAverageBuckets = DoubleArray(totalBuckets + 1)
+        val positiveAvgBuckets = DoubleArray(totalBuckets + 1)
         val positiveCountBuckets = IntArray(totalBuckets + 1)
-        val negativeAverageBuckets = DoubleArray(totalBuckets + 1)
-        val negativeCounterBuckets = IntArray(totalBuckets + 1)
+        val negativeAvgBuckets = DoubleArray(totalBuckets + 1)
+        val negativeCountBuckets = IntArray(totalBuckets + 1)
 
         for (i in 0 until totalSamples) {
             val bucketIndex = i / samplesPerBucketInt
@@ -55,13 +62,13 @@ class ParsedChannel(
             maxBuckets[bucketIndex] = max(maxBuckets[bucketIndex], sampleAsDouble)
             minBuckets[bucketIndex] = min(minBuckets[bucketIndex], sampleAsDouble)
             if (sampleAsDouble >= 0.0) {
-                positiveAverageBuckets[bucketIndex] =
-                    positiveAverageBuckets[bucketIndex] + sampleAsDouble
+                positiveAvgBuckets[bucketIndex] =
+                    positiveAvgBuckets[bucketIndex] + sampleAsDouble
                 positiveCountBuckets[bucketIndex] = positiveCountBuckets[bucketIndex] + 1
             } else {
-                negativeAverageBuckets[bucketIndex] =
-                    negativeAverageBuckets[bucketIndex] + sampleAsDouble
-                negativeCounterBuckets[bucketIndex] = negativeCounterBuckets[bucketIndex] + 1
+                negativeAvgBuckets[bucketIndex] =
+                    negativeAvgBuckets[bucketIndex] + sampleAsDouble
+                negativeCountBuckets[bucketIndex] = negativeCountBuckets[bucketIndex] + 1
             }
         }
 
@@ -91,6 +98,12 @@ class ParsedChannel(
                 100.0 * sin(2 * PI * (millisecondsPerBucket * i + millisecondsPerBucket / 2.0) / 1000.0)
         }
 
+        for (i in averageBuckets.indices) {
+            positiveAvgBuckets[i] =
+                if (positiveCountBuckets[i] == 0) 0.0 else positiveAvgBuckets[i] / positiveCountBuckets[i]
+            negativeAvgBuckets[i] =
+                if (negativeCountBuckets[i] == 0) 0.0 else negativeAvgBuckets[i] / negativeCountBuckets[i]
+        }
 
 
 //            for (i in averageBuckets.indices) {
@@ -114,6 +127,30 @@ class ParsedChannel(
                 resultBuckets1[i] = maxBuckets[i]
             } else {
                 resultBuckets1[i] = minBuckets[i]
+            }
+        }
+
+        for (i in averageBuckets.indices) {
+            if (positiveAvgBuckets[i].absoluteValue >= negativeAvgBuckets[i].absoluteValue) {
+                resultBuckets2[i] = positiveAvgBuckets[i]
+            } else {
+                resultBuckets2[i] = negativeAvgBuckets[i]
+            }
+        }
+
+        for (i in averageBuckets.indices) {
+            if (maxBuckets[i].absoluteValue >= minBuckets[i].absoluteValue) {
+                resultBuckets3[i] = maxBuckets[i]
+            } else {
+                resultBuckets3[i] = minBuckets[i]
+            }
+        }
+
+        for (i in averageBuckets.indices) {
+            if (averageBuckets[i] >= 0) {
+                resultBuckets4[i] = positiveAvgBuckets[i]
+            } else {
+                resultBuckets4[i] = negativeAvgBuckets[i]
             }
         }
 

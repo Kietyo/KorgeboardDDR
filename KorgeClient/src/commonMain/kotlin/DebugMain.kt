@@ -40,35 +40,57 @@ object DebugMain {
             val channel = sound.play()
 
             val lineWidth = 3.0
-            val line = solidRect(lineWidth, waveformHeight, Colors.YELLOW)
+            val line = solidRect(lineWidth, waveformHeight * 5, Colors.YELLOW)
+
+            lateinit var waveform1: UIMonoAudioWaveform
 
             val waveformContainer = container {
-                val waveform1 = UIMonoAudioWaveform(
+                waveform1 = UIMonoAudioWaveform(
                     waveformHeight,
                     parsedChannel.resultBuckets1,
                     xOffsetDelta
                 ).addTo(this)
                 val waveform2 = UIMonoAudioWaveform(
                     waveformHeight,
+                    parsedChannel.resultBuckets2,
+                    xOffsetDelta
+                ).addTo(this) {
+                    y += waveformHeight
+                }
+                val waveform4 = UIMonoAudioWaveform(
+                    waveformHeight,
+                    parsedChannel.resultBuckets3,
+                    xOffsetDelta
+                ).addTo(this) {
+                    y += waveformHeight * 2
+                }
+                val waveform5 = UIMonoAudioWaveform(
+                    waveformHeight,
+                    parsedChannel.resultBuckets4,
+                    xOffsetDelta
+                ).addTo(this) {
+                    y += waveformHeight * 3
+                }
+                val waveform3 = UIMonoAudioWaveform(
+                    waveformHeight,
                     parsedChannel.averageBuckets,
                     xOffsetDelta
                 ).addTo(this) {
-//                    alignTopToBottomOf(waveform1)
-                    y += waveformHeight
+                    y += waveformHeight * 4
                 }
 
+            }
 
-                addUpdater {
-                    val currentMillis = channel.current.milliseconds
-                    val currentBucketIndex = currentMillis / parsedChannel.millisecondsPerBucket
+            addUpdater {
+                val currentMillis = channel.current.milliseconds
+                val currentBucketIndex = currentMillis / parsedChannel.millisecondsPerBucket
 //                waveformContainer.x = -xOffsetDelta * currentBucketIndex
 
-                    line.setPositionRelativeTo(
-                        waveform1,
-                        Point(xOffsetDelta * currentBucketIndex - lineWidth / 2, 0.0)
-                    )
-                    line.centerYOn(waveform1)
-                }
+                line.setPositionRelativeTo(
+                    waveform1,
+                    Point(xOffsetDelta * currentBucketIndex - lineWidth / 2, 0.0)
+                )
+                line.centerYOn(waveformContainer)
             }
 
             waveformContainer.centerYOnStage()
