@@ -2,6 +2,7 @@ package com.xenotactic.korge.scenes
 
 import com.soywiz.korge.component.docking.dockedTo
 import com.soywiz.korge.view.Container
+import com.soywiz.korge.view.alignTopToTopOf
 import com.soywiz.korge.view.graphics
 import com.soywiz.korim.color.Colors
 import com.soywiz.korma.geom.Anchor
@@ -15,15 +16,11 @@ class UIMonoAudioWaveform(
 ) : Container() {
     init {
 
-        var xOffset = 0.0
-
 //        dockedTo(Anchor.LEFT)
 //                val maxSample = averageBuckets.max()
 
 
-        val graphics = graphics {
-
-        }
+        val graphics = graphics()
 
         graphics.updateShape {
             var prevXOffset = 0.0
@@ -39,7 +36,8 @@ class UIMonoAudioWaveform(
             }
         }
 
-        println("Finished drawing shape")
+        graphics.alignTopToTopOf(this)
+
 
 //        averageBuckets.forEach { sample ->
 //            solidRect(
@@ -69,5 +67,7 @@ class UIMonoAudioWaveform(
 
         scaledHeight = waveformHeight
         scaledWidth = 1280.0
+
+        println("Finished drawing shape")
     }
 }

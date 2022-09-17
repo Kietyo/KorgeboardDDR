@@ -31,7 +31,7 @@ object DebugMain {
             println("channel1: ${channel1}")
             println("channel1.size: ${channel1.size}")
 
-            val parsedChannel = ParsedChannel(channel1, audioData.rate, 128.0)
+            val parsedChannel = ParsedChannel(channel1, audioData.rate, 256.0)
 
             val waveformHeight = 200.0
 
