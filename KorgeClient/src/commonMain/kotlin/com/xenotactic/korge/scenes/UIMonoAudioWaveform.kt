@@ -1,5 +1,7 @@
 package com.xenotactic.korge.scenes
 
+import com.soywiz.korge.input.DraggableInfo
+import com.soywiz.korge.input.draggable
 import com.soywiz.korge.view.ClipContainer
 import com.soywiz.korge.view.graphics
 import com.soywiz.korge.view.solidRect
@@ -10,6 +12,12 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
+
+fun DraggableInfo.asString(): String {
+    return """
+        DraggableInfo(localDX: $localDX, localDY: $localDY, lastDx: $deltaDx, lastDy: $deltaDy, viewStartXY: $viewStartXY, viewPrevXY: $viewPrevXY, viewNextXY: $viewNextXY, viewDeltaXY: $viewDeltaXY)
+    """.trimIndent()
+}
 
 @OptIn(ExperimentalTime::class)
 class UIMonoAudioWaveform(
@@ -25,9 +33,15 @@ class UIMonoAudioWaveform(
         Short.MAX_VALUE.toDouble() * 2.0,
         Colors.BLACK
     )
-    val graphics = graphics()
+    val graphics = graphics().apply {
+        draggable() {
+            println(it.asString())
+            this@apply.y = 0.0
+        }
+    }
     val maxAbsoluteSample = 32768.0
     val minimumXOffsetDelta = clipWidth / bucketSamples.size
+    var lastDrawnXOffsetDelta = 0.0
 
     init {
 
@@ -68,19 +82,24 @@ class UIMonoAudioWaveform(
 
         println("Went here")
 
-
-        graphics.scaledHeight = clipHeight
-        graphics.scaledWidth = clipWidth
+//        graphics.scaledHeight = clipHeight
+//        graphics.scaledWidth = clipWidth
 
         println("Finished drawing shape")
+
+
     }
 
     fun redrawWaveform(xOffsetDelta: Double) {
         val actualXOffsetDelta = max(xOffsetDelta, minimumXOffsetDelta)
+        if (lastDrawnXOffsetDelta == actualXOffsetDelta) {
+            // Already drawn
+            return
+        }
         val timeToDrawWaveform = measureTime {
             graphics.updateShape {
                 var prevXOffset = 0.0
-                var prevSample = 0.0
+                var prevSample = waveformHalfHeight
                 bucketSamples.forEach { sample ->
                     val nextXOffset = prevXOffset + actualXOffsetDelta
                     if (nextXOffset > clipWidth) {
@@ -97,6 +116,8 @@ class UIMonoAudioWaveform(
                 }
             }
         }
+
+        lastDrawnXOffsetDelta = actualXOffsetDelta
 
         println("maxAbsoluteSample: $maxAbsoluteSample, timeToDrawWaveform: $timeToDrawWaveform")
 
