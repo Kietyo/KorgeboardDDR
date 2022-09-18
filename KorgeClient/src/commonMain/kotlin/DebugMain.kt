@@ -42,39 +42,40 @@ object DebugMain {
             val lineWidth = 3.0
             val line = solidRect(lineWidth, waveformHeight * 5, Colors.YELLOW)
 
+            val waveformWidth = 1000.0
             lateinit var waveform1: UIMonoAudioWaveform
 
             val waveformContainer = container {
                 waveform1 = UIMonoAudioWaveform(
+                    waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets1,
-                    xOffsetDelta
                 ).addTo(this)
                 val waveform2 = UIMonoAudioWaveform(
+                    waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets2,
-                    xOffsetDelta
                 ).addTo(this) {
                     y += waveformHeight
                 }
                 val waveform4 = UIMonoAudioWaveform(
+                    waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets3,
-                    xOffsetDelta
                 ).addTo(this) {
                     y += waveformHeight * 2
                 }
                 val waveform5 = UIMonoAudioWaveform(
+                    waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets4,
-                    xOffsetDelta
                 ).addTo(this) {
                     y += waveformHeight * 3
                 }
                 val waveform3 = UIMonoAudioWaveform(
+                    waveformWidth,
                     waveformHeight,
                     parsedChannel.averageBuckets,
-                    xOffsetDelta
                 ).addTo(this) {
                     y += waveformHeight * 4
                 }

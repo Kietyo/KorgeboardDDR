@@ -1,6 +1,7 @@
 import com.soywiz.korau.sound.readSound
 import com.soywiz.korge.Korge
 import com.soywiz.korge.component.docking.dockedTo
+import com.soywiz.korge.input.onScroll
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.Colors
 import com.soywiz.korio.async.runBlockingNoJs
@@ -21,7 +22,7 @@ object DebugMain2 {
 
     @JvmStatic
     fun main(args: Array<String>) = runBlockingNoJs {
-        Korge(width = 800, height = 720) {
+        Korge(width = 800, height = 720, bgcolor = Colors.LIGHTGRAY) {
 
 //            val anchors = mutableMapOf(
 //                "TOP_LEFT" to Anchor.TOP_LEFT,
@@ -61,15 +62,41 @@ object DebugMain2 {
             val audioData = sound.toAudioData()
             val channel1 = audioData.samples[1]
             val parsedChannel = ParsedChannel(channel1, audioData.rate, 256.0)
+            val waveformWidth = 1000.0
             val waveformHeight = 200.0
-            val xOffsetDelta = 1.0
 
 
             val waveform1 = UIMonoAudioWaveform(
+                waveformWidth,
                 waveformHeight,
                 parsedChannel.resultBuckets4,
-                xOffsetDelta
             ).addTo(this)
+
+            var xOffsetDelta = waveform1.minimumXOffsetDelta
+
+            onScroll {
+                if (it.isCtrlDown) {
+                    // Scale height
+                    if (it.scrollDeltaYLines < 0.0) {
+                        // Zoom in
+                    } else {
+                        // Zoom out
+                    }
+                } else {
+                    // Scale width
+                    if (it.scrollDeltaYLines < 0.0) {
+                        // Zoom in
+                        xOffsetDelta = max(xOffsetDelta - waveform1.minimumXOffsetDelta, waveform1.minimumXOffsetDelta)
+                        waveform1.redrawWaveform(xOffsetDelta)
+                    } else {
+                        // Zoom out
+                        xOffsetDelta = xOffsetDelta + waveform1.minimumXOffsetDelta
+                        waveform1.redrawWaveform(xOffsetDelta)
+                    }
+                }
+
+            }
+
 
         }
     }
