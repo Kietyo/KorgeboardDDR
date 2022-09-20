@@ -1,22 +1,14 @@
 import com.soywiz.korau.sound.readSound
 import com.soywiz.korge.Korge
-import com.soywiz.korge.component.docking.dockedTo
 import com.soywiz.korge.input.onScroll
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.Colors
 import com.soywiz.korio.async.runBlockingNoJs
 import com.soywiz.korio.file.std.resourcesVfs
-import com.soywiz.korio.util.endExclusiveClamped
-import com.soywiz.korio.util.endExclusiveWrapped
-import com.soywiz.korma.geom.Anchor
-import com.soywiz.korma.geom.Point
 import com.xenotactic.korge.scenes.ParsedChannel
 import com.xenotactic.korge.scenes.UIMonoAudioWaveform
 import kotlin.jvm.JvmStatic
-import kotlin.math.abs
-import kotlin.math.absoluteValue
-import kotlin.math.log
-import kotlin.math.max
+import kotlin.math.*
 
 object DebugMain2 {
 
@@ -61,20 +53,32 @@ object DebugMain2 {
             val sound = resourcesVfs["bird_world.mp3"].readSound()
             val audioData = sound.toAudioData()
             val channel1 = audioData.samples[1]
-            val parsedChannel = ParsedChannel(channel1, audioData.rate, 256.0)
-            val waveformWidth = 1000.0
-            val waveformHeight = 200.0
+            val parsedChannel = ParsedChannel(channel1, audioData.rate, 128.0)
+            val waveformWidth = 600.0
+            val waveformHeight = 400.0
 
 
             val waveform1 = UIMonoAudioWaveform(
                 waveformWidth,
                 waveformHeight,
-                parsedChannel.resultBuckets4,
+                parsedChannel.resultBuckets2,
             ).addTo(this)
 
-            var xOffsetDelta = waveform1.minimumXOffsetDelta
 
+            var xOffsetDelta = waveform1.minimumXOffsetDelta
+            var zoomInPercentage = 1.0
+            val zoomInPercentageText = text("Zoom in: ${(zoomInPercentage * 100).toInt()}%") {
+                alignTopToBottomOf(waveform1)
+            }
+            val zoomDelta = 0.02
+
+            var toggle = false
             onScroll {
+                println(it)
+                toggle = !toggle
+                if (toggle) {
+                    return@onScroll
+                }
                 if (it.isCtrlDown) {
                     // Scale height
                     if (it.scrollDeltaYLines < 0.0) {
@@ -86,14 +90,28 @@ object DebugMain2 {
                     // Scale width
                     if (it.scrollDeltaYLines < 0.0) {
                         // Zoom in
-                        xOffsetDelta = max(xOffsetDelta - waveform1.minimumXOffsetDelta, waveform1.minimumXOffsetDelta)
-                        waveform1.redrawWaveform(xOffsetDelta)
+                        xOffsetDelta = max(
+                            xOffsetDelta + waveform1.minimumXOffsetDelta,
+                            waveform1.minimumXOffsetDelta
+                        )
+                        zoomInPercentage = max(zoomInPercentage - zoomDelta, 0.08)
+//                        waveform1.redrawWaveform(zoomInPercentage)
+
+                        waveform1.zoom(zoomInPercentage)
                     } else {
                         // Zoom out
-                        xOffsetDelta = xOffsetDelta + waveform1.minimumXOffsetDelta
-                        waveform1.redrawWaveform(xOffsetDelta)
+                        xOffsetDelta = max(
+                            xOffsetDelta - waveform1.minimumXOffsetDelta,
+                            waveform1.minimumXOffsetDelta
+                        )
+                        zoomInPercentage = min(zoomInPercentage + zoomDelta, 1.0)
+//                        waveform1.redrawWaveform(zoomInPercentage)
+
+                        waveform1.zoom(zoomInPercentage)
                     }
                 }
+
+                zoomInPercentageText.text = "Zoom in: ${(zoomInPercentage * 100).toInt()}%"
 
             }
 

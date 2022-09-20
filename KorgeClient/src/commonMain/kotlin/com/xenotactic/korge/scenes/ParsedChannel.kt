@@ -19,13 +19,13 @@ class ParsedChannel(
     // using avg to decide on min and max
     val resultBuckets1 = DoubleArray(totalBuckets + 1)
 
-    // Comparing between absolute value of positive avgs and negative avg and choosing the one with the highest absolute value
+    // using avg to decide on positive avg or negative avg
     val resultBuckets2 = DoubleArray(totalBuckets + 1)
 
     // Comparing between absolute value of min and max and choosing the one with the highest absolute value
     val resultBuckets3 = DoubleArray(totalBuckets + 1)
 
-    // using avg to decide on positive avg or negative avg
+    // Comparing between absolute value of positive avgs and negative avg and choosing the one with the highest absolute value
     val resultBuckets4 = DoubleArray(totalBuckets + 1)
 
     // using avg
@@ -132,9 +132,9 @@ class ParsedChannel(
 
         for (i in averageBuckets.indices) {
             if (positiveAvgBuckets[i].absoluteValue >= negativeAvgBuckets[i].absoluteValue) {
-                resultBuckets2[i] = positiveAvgBuckets[i]
+                resultBuckets4[i] = positiveAvgBuckets[i]
             } else {
-                resultBuckets2[i] = negativeAvgBuckets[i]
+                resultBuckets4[i] = negativeAvgBuckets[i]
             }
         }
 
@@ -148,9 +148,9 @@ class ParsedChannel(
 
         for (i in averageBuckets.indices) {
             if (averageBuckets[i] >= 0) {
-                resultBuckets4[i] = positiveAvgBuckets[i]
+                resultBuckets2[i] = positiveAvgBuckets[i]
             } else {
-                resultBuckets4[i] = negativeAvgBuckets[i]
+                resultBuckets2[i] = negativeAvgBuckets[i]
             }
         }
 

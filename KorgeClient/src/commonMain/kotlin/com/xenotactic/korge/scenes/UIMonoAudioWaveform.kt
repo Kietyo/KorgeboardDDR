@@ -3,6 +3,7 @@ package com.xenotactic.korge.scenes
 import com.soywiz.korge.input.DraggableInfo
 import com.soywiz.korge.input.draggable
 import com.soywiz.korge.view.ClipContainer
+import com.soywiz.korge.view.cpuGraphics
 import com.soywiz.korge.view.graphics
 import com.soywiz.korge.view.solidRect
 import com.soywiz.korim.color.Colors
@@ -24,24 +25,47 @@ class UIMonoAudioWaveform(
     val clipWidth: Double,
     val clipHeight: Double,
     val bucketSamples: DoubleArray,
+    val allowDragging: Boolean = false
 ) : ClipContainer(clipWidth, clipHeight) {
     val numBucketsToDraw = bucketSamples.size
     val waveformHalfHeight = clipHeight / 2.0
+
+    // Suppose that `requiredVisibleWaveform=200.0`
+    // If you move the waveform to the left or right while dragging,
+    // requires that at least 200.0 units are visible.
+    // This is so you don't accidentally move it out too much that you can't see the
+    // waveform anymore.
+    val requiredVisibleWaveform = 200.0
+
+    val minXMoveRightOffset = clipWidth - requiredVisibleWaveform
 
     val bg = solidRect(
         clipWidth,
         Short.MAX_VALUE.toDouble() * 2.0,
         Colors.BLACK
     )
-    val graphics = graphics().apply {
-        draggable() {
-            println(it.asString())
-            this@apply.y = 0.0
+    val graphics = graphics().also { graphics ->
+        if (allowDragging) {
+            graphics.draggable() {
+                graphics.y = 0.0
+                if (graphics.x >= minXMoveRightOffset) {
+                    graphics.x = minXMoveRightOffset
+                }
+                val minXMoveLeftOffset = -(graphics.scaledWidth - requiredVisibleWaveform)
+                if (graphics.x < minXMoveLeftOffset) {
+                    graphics.x = minXMoveLeftOffset
+                }
+                println("Graphics(x=${graphics.x}, width=${graphics.scaledWidth})")
+            }
         }
     }
+
     val maxAbsoluteSample = 32768.0
     val minimumXOffsetDelta = clipWidth / bucketSamples.size
-    var lastDrawnXOffsetDelta = 0.0
+
+    // Suppose that this is 0.75.
+    // This value means that 75% of the waveform fits the window.
+    var renderedZoomIn = 0.0
 
     init {
 
@@ -52,7 +76,7 @@ class UIMonoAudioWaveform(
 //            it.absoluteValue
 //        }
 
-        redrawWaveform(minimumXOffsetDelta)
+        redrawWaveform(1.0)
 
 //        averageBuckets.forEach { sample ->
 //            solidRect(
@@ -90,12 +114,31 @@ class UIMonoAudioWaveform(
 
     }
 
-    fun redrawWaveform(xOffsetDelta: Double) {
-        val actualXOffsetDelta = max(xOffsetDelta, minimumXOffsetDelta)
-        if (lastDrawnXOffsetDelta == actualXOffsetDelta) {
+    fun zoom(percentageToZoomIn: Double) {
+//        if (percentageToZoomIn <= 0.5) {
+//            if (renderedZoomIn > 0.5) {
+//                redrawWaveform(percentageToZoomIn)
+//            }
+//        } else {
+//            if (renderedZoomIn <= 0.5) {
+//                redrawWaveform(percentageToZoomIn)
+//            }
+//        }
+        val originalZoomInMultiplier = 1.0 / percentageToZoomIn
+        graphics.scaleX = originalZoomInMultiplier
+    }
+
+    val actualXOffsetDelta get() =
+        max(clipWidth / (bucketSamples.size * renderedZoomIn), minimumXOffsetDelta)
+
+    fun redrawWaveform(percentageToZoomIn: Double) {
+        if (renderedZoomIn == percentageToZoomIn) {
             // Already drawn
             return
         }
+
+        renderedZoomIn = percentageToZoomIn
+
         val timeToDrawWaveform = measureTime {
             graphics.updateShape {
                 var prevXOffset = 0.0
@@ -108,7 +151,7 @@ class UIMonoAudioWaveform(
                     val currentSample =
                         (if (sample.isNaN()) 0.0 else -sample) / maxAbsoluteSample * waveformHalfHeight
                     val finalSample = currentSample + waveformHalfHeight
-                    stroke(Colors.RED, StrokeInfo(thickness = xOffsetDelta)) {
+                    stroke(Colors.YELLOW, StrokeInfo(thickness = actualXOffsetDelta)) {
                         line(prevXOffset, prevSample, nextXOffset, finalSample)
                         prevXOffset = nextXOffset
                         prevSample = finalSample
@@ -117,9 +160,9 @@ class UIMonoAudioWaveform(
             }
         }
 
-        lastDrawnXOffsetDelta = actualXOffsetDelta
+        renderedZoomIn = percentageToZoomIn
 
         println("maxAbsoluteSample: $maxAbsoluteSample, timeToDrawWaveform: $timeToDrawWaveform")
 
     }
- }
+}

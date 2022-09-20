@@ -37,60 +37,63 @@ object DebugMain {
 
             val xOffsetDelta = 1.0
 
-            val channel = sound.play()
 
             val lineWidth = 3.0
-            val line = solidRect(lineWidth, waveformHeight * 5, Colors.YELLOW)
 
             val waveformWidth = 1000.0
-            lateinit var waveform1: UIMonoAudioWaveform
+            val waveforms = mutableListOf<UIMonoAudioWaveform>()
 
             val waveformContainer = container {
-                waveform1 = UIMonoAudioWaveform(
+
+                waveforms.add(UIMonoAudioWaveform(
                     waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets1,
-                ).addTo(this)
-                val waveform2 = UIMonoAudioWaveform(
+                ))
+                waveforms.add(UIMonoAudioWaveform(
                     waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets2,
-                ).addTo(this) {
-                    y += waveformHeight
-                }
-                val waveform4 = UIMonoAudioWaveform(
+                ))
+                waveforms.add(UIMonoAudioWaveform(
                     waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets3,
-                ).addTo(this) {
-                    y += waveformHeight * 2
-                }
-                val waveform5 = UIMonoAudioWaveform(
+                ))
+                waveforms.add(UIMonoAudioWaveform(
                     waveformWidth,
                     waveformHeight,
                     parsedChannel.resultBuckets4,
-                ).addTo(this) {
-                    y += waveformHeight * 3
-                }
-                val waveform3 = UIMonoAudioWaveform(
+                ))
+                waveforms.add(UIMonoAudioWaveform(
                     waveformWidth,
                     waveformHeight,
                     parsedChannel.averageBuckets,
-                ).addTo(this) {
-                    y += waveformHeight * 4
+                ))
+
+                waveforms.forEach { it.addTo(this) }
+                waveforms.windowed(2) {
+                    it[1].alignTopToBottomOf(it[0], padding = 5.0)
                 }
 
             }
+            val line = solidRect(lineWidth, waveformHeight * 5, Colors.YELLOW)
+
+
+            val channel = sound.play()
 
             addUpdater {
                 val currentMillis = channel.current.milliseconds
                 val currentBucketIndex = currentMillis / parsedChannel.millisecondsPerBucket
 //                waveformContainer.x = -xOffsetDelta * currentBucketIndex
 
+                val firstWaveform = waveforms.first()
+
                 line.setPositionRelativeTo(
-                    waveform1,
-                    Point(xOffsetDelta * currentBucketIndex - lineWidth / 2, 0.0)
+                    firstWaveform.graphics,
+                    Point(firstWaveform.actualXOffsetDelta * currentBucketIndex - lineWidth / 2, 0.0)
                 )
+                line.scaledHeight = waveformContainer.scaledHeight
                 line.centerYOn(waveformContainer)
             }
 
